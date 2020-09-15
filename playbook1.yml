@@ -1,0 +1,65 @@
+--- 
+- 
+  become: true
+  become_method: sudo
+  hosts: 127.0.0.1
+  remote_user: ubuntu
+  tasks: 
+    - 
+      apt: 
+        cache_valid_time: 86400
+        update_cache: true
+        upgrade: true
+      name: "Update and upgrade apt packages"
+    - 
+      apt: 
+        name: openjdk-11-jdk
+        state: present
+      name: "install JDK 11"
+    - 
+      group: 
+        name: apache
+      name: "add apache group"
+    - 
+      name: "add apache user"
+      user: 
+        createhome: false
+        group: apache
+        home: /user/share/tomcat
+        name: tomcat
+    - 
+      file: 
+        mode: 493
+        path: /opt/tomcat
+        state: directory
+      name: "create /opt/tomcat directory"
+    - 
+      name: "download & unarchive"
+      unarchive: 
+        dest: /opt/tomcat
+        extra_opts: 
+          - "--strip-components=1"
+        remote_src: true
+        src: "https://mirrors.gigenet.com/apache//httpd/httpd-2.4.46.tar.gz"
+    - 
+      file: 
+        group: tomcat
+        mode: "u+rwx,g+rx,o=rx"
+        owner: tomcat
+        path: /opt/tomcat
+        recurse: true
+        state: directory
+      name: "Change ownership"
+    - 
+      copy: 
+        dest: /etc/systemd/system/
+        mode: 493
+        src: tomcat.service
+      name: "Copy Tomcat service from local to remote"
+    -
+      name: "Start and enable Tomcat service"
+      systemd: 
+        daemon_reload: true
+        enabled: true
+        name: apache
+        state: started
