@@ -1,0 +1,11 @@
+---
+-
+  hosts: 172.20.10.4
+  connection: windows
+  tasks:
+    -
+      name: "ensure apache is at the latest version"
+      win_chocolatey:
+        name: apache-httpd
+        state: present
+
